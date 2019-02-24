@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Monster Slayer</title>
+    <script src="https://npmcdn.com/vue/dist/vue.js"></script>
+    <link rel="stylesheet" href="css/foundation.min.css" />
+    <link rel="stylesheet" href="css/app.css" />
+  </head>
+  <body>
+    <div id="app">
+      <section class="row">
+        <div class="small-6 columns">
+          <h1 class="text-center">YOU</h1>
+          <div class="healthbar">
+            <div
+              class="healthbar text-center"
+              style="background-color: green; margin: 0; color: white;"
+              :style="myCurrentHP"
+            ></div>
+          </div>
+        </div>
+        <div class="small-6 columns">
+          <h1 class="text-center">MONSTER</h1>
+          <div class="healthbar">
+            <div
+              class="healthbar text-center"
+              style="background-color: green; margin: 0; color: white;"
+              :style="monsterCurrentHP"
+            ></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="row controls">
+        <div class="small-12 columns">
+          <button id="start-game" @click="startNewGame()">
+            START NEW GAME
+          </button>
+        </div>
+      </section>
+
+      <section v-show="gameOn && notGameOver" class="row controls">
+        <div class="small-12 columns">
+          <button id="attack" @click="atack()">ATTACK</button>
+          <button id="special-attack" @click="specialAtack()">
+            SPECIAL ATTACK
+          </button>
+          <button id="heal" @click="heal()">HEAL</button>
+          <button id="give-up" @click="giveUp()">GIVE UP</button>
+        </div>
+      </section>
+
+      <section v-show="gameOn && notGameOver" class="row log">
+        <div class="small-12 columns">
+          <ul>
+            <li v-for="log in gameLog" :class="log.cl">{{ log.txt }}</li>
+          </ul>
+        </div>
+      </section>
+    </div>
+  </body>
+  <script>
+    new Vue({
+      el: "#app",
+      data: {
+        myHp: 100,
+        monHp: 100,
+        gameOn: false,
+        gameLog: []
+      },
+      computed: {
+        myCurrentHP: function() {
+          return `width: ${this.myHp}%`;
+        },
+        monsterCurrentHP: function() {
+          return `width: ${this.monHp}%`;
+        },
+        notGameOver: function() {
+          return this.myHp != 0 && this.monHp != 0;
+        }
+      },
+      watch: {
+        myHp: function() {
+          if (this.myHp === 0) {
+            alert("Player you just lost this fight!");
+            this.resetData();
+          }
+        },
+        monHp: function() {
+          if (this.monHp === 0) {
+            alert("Player you just won the fight! grats!");
+            this.resetData();
+          }
+        }
+      },
+      methods: {
+        startNewGame: function() {
+          this.gameOn = true;
+        },
+        simpleAtackValue: function() {
+          var randomnum = Math.floor(Math.random() * (10 - 1) + 1) / 1;
+          return randomnum;
+        },
+        dps: function(value) {
+          if (this.monHp - value < 0) {
+            this.monHp = 0;
+          } else {
+            this.monHp -= value;
+          }
+          this.gameLog.push({
+            cl: "player-turn",
+            txt: `Player dealt ${value} damage to the monster!`
+          });
+        },
+        monsterDps: function(value) {
+          if (this.myHp - value < 0) {
+            this.myHp = 0;
+          } else {
+            this.myHp -= value;
+          }
+          this.gameLog.push({
+            cl: "monster-turn",
+            txt: `Monster dealt ${value} damage to the player!`
+          });
+        },
+        atack: function() {
+          var myAtackPower = this.simpleAtackValue();
+          this.dps(myAtackPower);
+
+          this.monsterAtack();
+        },
+        specialAtack: function() {
+          var myAtackPower = this.simpleAtackValue() + 3;
+          this.dps(myAtackPower);
+
+          this.monsterAtack();
+        },
+        monsterAtack: function() {
+          var monsterAtackPower = this.simpleAtackValue();
+          this.monsterDps(monsterAtackPower);
+        },
+        heal: function() {
+          var healValue = this.simpleAtackValue() + 1;
+          if (this.myHp + healValue > 100) {
+            this.myHp = 100;
+          } else {
+            this.myHp += healValue;
+          }
+          this.gameLog.push({
+            cl: "player-turn",
+            txt: `Player healed ${healValue} hp!`
+          });
+          this.monsterAtack();
+        },
+        giveUp: function() {
+          this.resetData();
+        },
+        resetData: function() {
+          this.gameOn = false;
+          this.myHp = 100;
+          this.monHp = 100;
+          this.gameLog = [];
+        }
+      }
+    });
+  </script>
+</html>
